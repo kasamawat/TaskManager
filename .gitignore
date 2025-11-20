@@ -1,0 +1,21 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+
+# Build
+bin/
+obj/
+Debug/
+Release/
+x64/
+x86/
+
+# Dotnet
+*.dll
+*.exe
+
+# Others
+*.log
+*.DS_Store
