@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TaskManager.Application.Common;
 using TaskManager.Application.DTOs.Tasks;
+using TaskStatus = TaskManager.Domain.Enums.TaskStatus;
 
 namespace TaskManager.Application.Interfaces
 {

@@ -16,6 +16,9 @@ namespace TaskManager.Infrastructure.Persistence
             base.OnModelCreating(modelBuilder);
 
             // can config next time ex. max lenght, unique index
+            modelBuilder.Entity<User>()
+                .HasIndex(e => e.Email)
+                .IsUnique();
         }
     }
 }

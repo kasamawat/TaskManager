@@ -7,12 +7,8 @@ using TaskStatus = TaskManager.Domain.Enums.TaskStatus;
 
 namespace TaskManager.Application.DTOs.Tasks
 {
-    public class ProjectTaskDto
+    public class ChangeTaskStatusRequest
     {
-        public Guid Id { get; set; }
-        public string Title { get; set; } = "";
-        public string? Detail { get; set; }
-        public DateTime? DueDate { get; set; }
         public TaskStatus Status { get; set; }
     }
 }
