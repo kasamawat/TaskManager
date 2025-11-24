@@ -7,12 +7,18 @@ using TaskManager.Application.Services;
 using TaskManager.Infrastructure.Auth;
 using TaskManager.Infrastructure.Persistence;
 using TaskManager.Infrastructure.Repositories;
+using TaskManager.Application.Validator.Auth;
+using FluentValidation.AspNetCore;
+using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
+
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>();
 
 // Connection string Db Context
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -22,16 +28,23 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(conn
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 
 // DI for Infratructure
-builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+builder.Services.AddScoped<IProjectReportRepository, ProjectReportRepository>();
+builder.Services.AddScoped<IUserProjectOverviewRepository, UserProjectOverviewRepository>();
 
 // DI for Application Service
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<IProjectReportService, ProjectReportService>();
+builder.Services.AddScoped<IUserProjectOverviewService, UserProjectOverviewService>();
+
+// add memory cache
+builder.Services.AddMemoryCache();
 
 // JWT Authentication
 var jwtSection = builder.Configuration.GetSection("Jwt");

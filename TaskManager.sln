@@ -3,13 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskManager.Api", "TaskManager.Api\TaskManager.Api.csproj", "{794E8818-A8D7-4708-B9A3-DD08B3353423}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TaskManager.Api", "TaskManager.Api\TaskManager.Api.csproj", "{794E8818-A8D7-4708-B9A3-DD08B3353423}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskManager.Domain", "TaskManager.Domain\TaskManager.Domain.csproj", "{CC7A6C1C-7948-4F20-B78C-DF63A000BD54}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TaskManager.Domain", "TaskManager.Domain\TaskManager.Domain.csproj", "{CC7A6C1C-7948-4F20-B78C-DF63A000BD54}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskManager.Application", "TaskManager.Application\TaskManager.Application.csproj", "{ACB0EBF6-F6BA-4EE0-A7DA-8D59B9A9EEA3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TaskManager.Application", "TaskManager.Application\TaskManager.Application.csproj", "{ACB0EBF6-F6BA-4EE0-A7DA-8D59B9A9EEA3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskManager.Infrastructure", "TaskManager.Infrastructure\TaskManager.Infrastructure.csproj", "{7220D203-1404-47C0-9557-E2E94AE07016}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TaskManager.Infrastructure", "TaskManager.Infrastructure\TaskManager.Infrastructure.csproj", "{7220D203-1404-47C0-9557-E2E94AE07016}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TaskManager.Tests", "TaskManager.Tests\TaskManager.Tests.csproj", "{B60D835C-C049-4956-9968-3FB11850588B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{7220D203-1404-47C0-9557-E2E94AE07016}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7220D203-1404-47C0-9557-E2E94AE07016}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7220D203-1404-47C0-9557-E2E94AE07016}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B60D835C-C049-4956-9968-3FB11850588B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B60D835C-C049-4956-9968-3FB11850588B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B60D835C-C049-4956-9968-3FB11850588B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B60D835C-C049-4956-9968-3FB11850588B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
