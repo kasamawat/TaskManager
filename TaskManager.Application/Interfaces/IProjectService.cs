@@ -10,6 +10,7 @@ namespace TaskManager.Application.Interfaces
 {
     public interface IProjectService
     {
+        Task<ServiceResult<List<ProjectDto>>> OnloadAsync(Guid userId);
         Task<ServiceResult<ProjectDto>> CreateAsync(Guid userId, CreateProjectRequest request);
         Task<ServiceResult<ProjectDto>> UpdateAsync(Guid projectId, UpdateProjectRequest request);
         Task<ServiceResult<bool>> DeleteAsync(Guid projectId);

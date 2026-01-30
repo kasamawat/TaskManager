@@ -13,6 +13,14 @@ namespace TaskManager.Application.Services
             _projectRepository = projectRepository;
         }
 
+        public async Task<ServiceResult<List<ProjectDto>>> OnloadAsync(Guid userId)
+        {
+            var projects = await _projectRepository.GetAsync(userId);
+
+            var dtos = MapToDtos(projects);
+
+            return ServiceResult<List<ProjectDto>>.Success(dtos);
+        }
         public async Task<ServiceResult<ProjectDto>> CreateAsync(Guid userId, CreateProjectRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Name))
@@ -74,6 +82,23 @@ namespace TaskManager.Application.Services
                 Name = project.Name,
                 Description = project.Description,
             };
+        }
+
+        private static List<ProjectDto> MapToDtos(List<Project> projects)
+        {
+            var result = new List<ProjectDto>();
+
+            foreach (var p in projects)
+            {
+                result.Add(new ProjectDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Description = p.Description
+                });
+            }
+
+            return result;
         }
     }
 }

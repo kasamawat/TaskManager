@@ -9,6 +9,7 @@ namespace TaskManager.Application.Interfaces
 {
     public interface IProjectRepository
     {
+        Task<List<Project?>> GetAsync(Guid userId, CancellationToken cancellationToken = default);
         Task<Project?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
         Task AddAsync(Project project, CancellationToken cancellationToken = default);
         Task UpdateAsync(Project project, CancellationToken cancellationToken = default);

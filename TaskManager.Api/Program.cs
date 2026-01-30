@@ -10,8 +10,69 @@ using TaskManager.Infrastructure.Repositories;
 using TaskManager.Application.Validator.Auth;
 using FluentValidation.AspNetCore;
 using FluentValidation;
+using Serilog;
+using Serilog.Events;
+using Serilog.Formatting.Compact;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using Microsoft.AspNetCore.Diagnostics;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// allow
+var allowedOrigins = new[] { "http://localhost:5173", "http://127.0.0.1:5173" };
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins(allowedOrigins)   // ระบุ origin ที่อนุญาต (ห้ามใช้ "*" ถ้า AllowCredentials)
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();          // ถ้าใช้ cookie หรือส่ง credentials
+    });
+});
+
+// ================== Serilog bootstrap ==================
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+    .Enrich.FromLogContext()
+    .Enrich.WithMachineName()
+    .Enrich.WithEnvironmentUserName()
+    .Enrich.WithThreadId()
+    .WriteTo.Console(new RenderedCompactJsonFormatter()) // structured JSON
+    .WriteTo.File(new RenderedCompactJsonFormatter(), "logs/log-.json", rollingInterval: RollingInterval.Day)
+    // Seq (optional) - set via appsettings
+    .WriteTo.Seq(builder.Configuration.GetValue<string>("Seq:Url", "http://localhost:5341"))
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
+// ================== Health checks (SQL example) ==================
+var conn = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddHealthChecks()
+    .AddSqlServer(conn, name: "sqlserver");
+
+// ================== OpenTelemetry Tracing (Jaeger) ==================
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracerProviderBuilder =>
+    {
+        tracerProviderBuilder
+            .SetResourceBuilder(
+                ResourceBuilder.CreateDefault().AddService("TaskManager.Api"))
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddSqlClientInstrumentation()
+            .AddSource("TaskManager")   // optional หากคุณใช้ ActivitySource เอง
+            .AddJaegerExporter(jaegerOptions =>
+            {
+                jaegerOptions.AgentHost = builder.Configuration.GetValue<string>("Jaeger:Host", "localhost");
+                jaegerOptions.AgentPort = builder.Configuration.GetValue<int>("Jaeger:Port", 6831);
+            });
+    });
+
 
 // Add services to the container.
 
@@ -98,7 +159,68 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// Build App
 var app = builder.Build();
+
+// ================== Use Serilog request logging (automatic request start/stop logs) ==================
+app.UseSerilogRequestLogging(options =>
+{
+    // enrich from http context if needed
+    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+        diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+        if (httpContext.Request.Headers.TryGetValue("X-Correlation-ID", out var cid))
+            diagnosticContext.Set("CorrelationId", cid.ToString());
+    };
+});
+
+// ================== Global exception handler that logs exceptions ==================
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var exFeature = context.Features.Get<IExceptionHandlerFeature>();
+        var ex = exFeature?.Error;
+        Log.Error(ex, "Unhandled exception occurred while processing request");
+
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(new
+        {
+            error = "An unexpected error occurred."
+        });
+    });
+});
+
+// ================== Correlation ID middleware (adds X-Correlation-ID header) ==================
+app.Use(async (context, next) =>
+{
+    const string headerKey = "X-Correlation-ID";
+    if (!context.Request.Headers.TryGetValue(headerKey, out var correlationId))
+    {
+        correlationId = Guid.NewGuid().ToString();
+        context.Request.Headers[headerKey] = correlationId;
+    }
+
+    context.Response.OnStarting(() =>
+    {
+        if (!context.Response.Headers.ContainsKey(headerKey))
+            context.Response.Headers[headerKey] = correlationId.ToString();
+        return Task.CompletedTask;
+    });
+
+    using (Serilog.Context.LogContext.PushProperty("CorrelationId", correlationId.ToString()))
+    {
+        await next();
+    }
+});
+
+// Routing & Metrics
+app.UseRouting();
+
+// Prometheus: record HTTP metrics (prometheus-net)
+app.UseHttpMetrics();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -109,8 +231,35 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// ใช้ CORS ก่อน auth / endpoints
+app.UseCors("AllowFrontend");
+
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Map endpoints
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+
+    // Health check endpoint
+    endpoints.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        ResponseWriter = async (ctx, report) =>
+        {
+            var json = new
+            {
+                status = report.Status.ToString(),
+                details = report.Entries.ToDictionary(k => k.Key, v => new { v.Value.Status, v.Value.Description })
+            };
+            ctx.Response.ContentType = "application/json";
+            await ctx.Response.WriteAsJsonAsync(json);
+        }
+    });
+
+    // Prometheus scrape endpoint (default /metrics)
+    endpoints.MapMetrics();
+});
 
 app.MapControllers();
 

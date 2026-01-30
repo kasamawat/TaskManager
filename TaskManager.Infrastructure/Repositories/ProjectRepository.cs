@@ -17,6 +17,11 @@ namespace TaskManager.Infrastructure.Repositories
         {
             _db = db;
         }
+        public async Task<List<Project?>> GetAsync(Guid userId, CancellationToken cancellationToken = default)
+        {
+            return await _db.Projects.Where(p => p.OwnerId == userId).ToListAsync(cancellationToken);
+        }
+
         public async Task AddAsync(Project project, CancellationToken cancellationToken = default)
         {
             await _db.Projects.AddAsync(project, cancellationToken);

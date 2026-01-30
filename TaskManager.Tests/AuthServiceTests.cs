@@ -96,5 +96,32 @@ namespace TaskManager.Tests
             result.IsSuccess.Should().BeTrue();
             result.Data!.Token.Should().Be("jwt-token");
         }
+        [Fact]
+        public async Task Login_Should_Failed()
+        {
+            // Arrange
+            var user = new User("A", "B", "a@test.com", "hashed");
+
+            _userRepo.Setup(x => x.GetByEmailAsync("b@test.com", default)).ReturnsAsync(user);
+
+            _hasher.Setup(x => x.VerifyPassword("hashed", "123")).Returns(true);
+
+            _jwt.Setup(x => x.GenerateToken(user.Id, user.Email)).Returns("jwt-token");
+
+            var service = CreateService();
+
+            var request = new LoginRequest
+            {
+                Email = "a@test.com",
+                Password = "123"
+            };
+
+            // Act
+            var result = await service.LoginAsync(request);
+
+            // Assert
+            result.IsSuccess.Should().BeFalse();
+            result.Error.Should().Be("Invalid email or password.");
+        }
     }
 }

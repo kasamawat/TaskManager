@@ -16,6 +16,25 @@ namespace TaskManager.Api.Controllers
             _projectService = projectService;
         }
 
+        // GET: /api/loadProject
+        [HttpGet]
+        public async Task<IActionResult> OnloadProject()
+        {
+            var userId = GetUserIdFromToken();
+            if(userId == null)
+            {
+                return Unauthorized(new { error = "Invalid token." });
+            }
+
+            var result = await _projectService.OnloadAsync(userId.Value);
+            if(!result.IsSuccess)
+            {
+                return BadRequest(new { error = result.Error });
+            }
+
+            return Ok(result);
+        }
+
         // POST: /api/projects
         [HttpPost]
         public async Task<IActionResult> CreateProject([FromBody] CreateProjectRequest request)
@@ -34,6 +53,7 @@ namespace TaskManager.Api.Controllers
 
             return Ok(result);
         }
+
         [HttpPut("{projectId:guid}")]
         // PUT: /api/project/update
         public async Task<IActionResult> UpdateProject(Guid projectId, [FromBody] UpdateProjectRequest request)

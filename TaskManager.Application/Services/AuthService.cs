@@ -70,7 +70,7 @@ namespace TaskManager.Application.Services
             var isValidPassword = _passwordHasher.VerifyPassword(user.PasswordHash, request.Password);
             if (!isValidPassword)
             {
-                return ServiceResult<AuthResponse>.Fail("Invalid email or password");
+                return ServiceResult<AuthResponse>.Fail("Invalid email or password.");
             }
 
             // Generate Token
